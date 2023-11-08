@@ -1,0 +1,1 @@
+Container for body comp. segmentation

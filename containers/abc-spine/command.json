@@ -1,0 +1,80 @@
+{
+    "name": "abc-spine",
+    "description": "Locates vertebral levels on a CT scan",
+    "label": "abc-spine",
+    "version": "1.0",
+    "type": "docker",
+    "image": "abc/abc-spine:1.0",
+    "command-line": "python -m main -i /input -o /output",
+    "mounts": [
+        {
+            "name": "in",
+            "writable": "false",
+            "path": "/input"
+        },
+        {
+            "name": "out",
+            "writable": "true",
+            "path": "/output"
+        }
+    ],
+    "inputs": [
+        {
+            "name": "SCAN_ID",
+            "description": "Scan ID",
+            "required": true
+        }
+    ],
+    "outputs": [
+        {
+            "name": "output",
+            "description": "Mask with vertebral levels identified",
+            "mount": "out",
+            "required": true
+        }
+    ],
+    "xnat": [
+        {
+            "name": "abc-spine",
+            "description": "Run spine labelling from ABC toolkit",
+            "label": "abc-spine",
+            "contexts": ["xnat:imageScanData"],
+            "external-inputs": [
+                {
+                    "name": "scan",
+                    "description": "Input scan",
+                    "type": "Scan",
+                    "required": true,
+                    "matcher": "'DICOM' in @.resources[*].label"
+                }
+            ],
+            "derived-inputs": [
+                {
+                    "name": "scan-id",
+                    "description": "Scan id",
+                    "type": "string",
+                    "derived-from-wrapper-input": "scan",
+                    "derived-from-xnat-object-property": "id",
+                    "provides-value-for-command-input": "SCAN_ID"
+                },
+                {
+                    "name": "scan-dicoms",
+                    "description": "The dicom resource on the scan",
+                    "type": "Resource",
+                    "derived-from-wrapper-input": "scan",
+                    "provides-files-for-command-mount": "in",
+                    "matcher": "@.label == 'DICOM'"
+                }
+            ],
+            "output-handlers": [
+                {
+                    "name": "spine-output",
+                    "accepts-command-output": "output",
+                    "as-a-child-of": "scan",
+                    "type": "Resource",
+                    "label": "SPINE"
+                }
+            ]
+        }
+    ]
+}
